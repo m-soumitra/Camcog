@@ -4,10 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@CrossOrigin(origins = { "http://localhost:8100" })
+//@CrossOrigin(origins = { "http://localhost:8100" })
 public class CameraRecogService {
 
 	@Autowired
@@ -34,23 +30,22 @@ public class CameraRecogService {
 		StatusDTO status = new StatusDTO();
 		File file = null;
 		ClassLoader classLoader = getClass().getClassLoader();
-		String modelsPath  = classLoader.getResource("models/inception5h").getPath();		
+		String modelsPath = classLoader.getResource("models/inception5h").getPath();
+		String imagePath = classLoader.getResource("Caaar.jpg").getPath();
 		byte[] imageData = null;
-		
+
 		try {
-			file = ResourceUtils.getFile("classpath:Caaar.jpg");
+			file = ResourceUtils.getFile(imagePath);
 		} catch (FileNotFoundException e) {
 			logger.error("Exception occurred while reading file: ", e);
 		}
 
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
-			file = ResourceUtils.getFile("classpath:Caaar.jpg");
 			imageData = new byte[(int) file.length()];
 			fileInputStream.read(imageData);
 		} catch (IOException e) {
 			logger.error("Exception occurred while parsing file: ", e);
-		}		
-		
+		}
 		status.setMsg(camRecog.execute(modelsPath.substring(1, modelsPath.length()), imageData));
 		status.setStatusCd(200);
 		return status;
