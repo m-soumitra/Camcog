@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,17 +34,19 @@ public class CameraRecogService {
 		ClassLoader classLoader = getClass().getClassLoader();
 		String modelsPath = classLoader.getResource("models/inception5h").getPath();
 		String imagePath = classLoader.getResource("Caaar.jpg").getPath();
-		byte[] imageData = null;
+		// InputStream imageAsStream = classLoader.getResourceAsStream("Caaar.jpg");
+		byte[] imageData = new byte[1000000];
 
-		try {
+		/*try {
 			file = ResourceUtils.getFile(imagePath);
 		} catch (FileNotFoundException e) {
 			logger.error("Exception occurred while reading file: ", e);
 		}
-
-		try (FileInputStream fileInputStream = new FileInputStream(file)) {
-			imageData = new byte[(int) file.length()];
-			fileInputStream.read(imageData);
+*/
+		try (InputStream imageAsStream = classLoader.getResourceAsStream("Caaar.jpg")) {
+			int length = imageAsStream.read(imageData);
+			//imageData = new byte[(int) length];
+			//imageAsStream.read(imageData);
 		} catch (IOException e) {
 			logger.error("Exception occurred while parsing file: ", e);
 		}
