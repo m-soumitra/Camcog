@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 
- * @author Soumitra Mohakud This uses an already trained model to identify
- *         images.
+ * @author Soumitra Mohakud
+ * @category This uses an already trained model to identify images.
  */
 @CrossOrigin
 @RestController
@@ -26,20 +26,17 @@ public class CameraRecogService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	@RequestMapping(value = "/fetchImageName", method = RequestMethod.POST)
-	public StatusDTO cameraService(@RequestBody String encodedImage) {
+	@RequestMapping(value = "/fetchProbability", method = RequestMethod.POST)
+	public StatusDTO fetchProbability(@RequestBody String encodedImage,
+			@RequestParam("matchCasesReq") int matchCasesReq) {
 		logger.info("Camera in Action");
 		logger.info("Image Byte Array {}", encodedImage);
 		byte[] imageByteData = Base64.decodeBase64(encodedImage);
 		StatusDTO status = new StatusDTO();
 		ClassLoader classLoader = getClass().getClassLoader();
-		String modelsPath = classLoader.getResource("models/inception5h").getPath();
-		String imagePath = classLoader.getResource("Caaar.jpg").getPath();
-		logger.info("Image path {} ", imagePath);
-		logger.info("Model Path {} ", modelsPath);
 
 		try {
-			status.setMsg(camRecog.execute(imageByteData, classLoader));
+			status.setMsg(camRecog.execute(imageByteData, matchCasesReq, classLoader));
 			status.setStatusCd(200);
 		} catch (Exception e) {
 			logger.error("Exception occurred while parsing file: ", e);
@@ -47,10 +44,5 @@ public class CameraRecogService {
 			status.setStatusCd(500);
 		}
 		return status;
-	}
-
-	@RequestMapping(value = "/fetchdum", method = RequestMethod.GET)
-	public String cameraDummy() {
-		return "test service";
 	}
 }

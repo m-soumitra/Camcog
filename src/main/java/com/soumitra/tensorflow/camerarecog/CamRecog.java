@@ -3,13 +3,20 @@ package com.soumitra.tensorflow.camerarecog;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.tensorflow.DataType;
 import org.tensorflow.Graph;
 import org.tensorflow.Output;
@@ -18,12 +25,17 @@ import org.tensorflow.Tensor;
 import org.tensorflow.TensorFlow;
 import org.tensorflow.types.UInt8;
 
+/**
+ * 
+ * @author Soumitra Mohakud
+ *
+ */
 @Component("camRecog")
 public class CamRecog {
 
 	private static final Logger logger = LoggerFactory.getLogger(CamRecog.class);
 
-	public String execute(byte[] imageData, ClassLoader classLoader) throws Exception {
+	public String execute(byte[] imageData, int matchCasesReq, ClassLoader classLoader) throws Exception {
 		if (imageData.length > 0 && classLoader == null) {
 			logger.error(
 					"This program uses a pre-trained inception model to identify JPEG images. Takes byte stream of images and compares with the model.");
@@ -42,9 +54,22 @@ public class CamRecog {
 				labels.add(scanner.nextLine());
 			}
 			float[] labelProbabilities = executeInceptionGraph(graphDef, image);
-			int bestMatchCaseLabelIndex = maxIndex(labelProbabilities);
-			String result = String.format("Probable match: %s (%.2f percentage)", labels.get(bestMatchCaseLabelIndex),
-					labelProbabilities[bestMatchCaseLabelIndex] * 100f);
+			String result = "";
+			if (matchCasesReq > 1) {
+				List<Entry<Integer, Float>> maxIndexList = maxIndexList(labelProbabilities);
+				if (!CollectionUtils.isEmpty(maxIndexList)) {
+					StringBuilder resultBuilder = new StringBuilder("Probable matches: ");
+					for (int i = 0; i < matchCasesReq; i++) {
+						resultBuilder.append(String.format("%s (%.2f percentage) :",
+								labels.get(maxIndexList.get(i).getKey()), maxIndexList.get(i).getValue() * 100f));
+					}
+					result = resultBuilder.toString();
+				} else {
+					int bestMatchCaseLabelIndex = maxIndex(labelProbabilities);
+					result = String.format("Probable match: %s (%.2f percentage)", labels.get(bestMatchCaseLabelIndex),
+							labelProbabilities[bestMatchCaseLabelIndex] * 100f);
+				}
+			}
 			logger.info(result);
 			return result;
 		} catch (Exception e) {
@@ -114,6 +139,22 @@ public class CamRecog {
 			}
 		}
 		return best;
+	}
+
+	private static List<Entry<Integer, Float>> maxIndexList(float[] probabilities) {
+		Map<Integer, Float> map = new HashMap<>();
+		for (int k = 0; k < probabilities.length; k++)
+			map.put(k, probabilities[k]);
+
+		List<Map.Entry<Integer, Float>> listOfEntries = new LinkedList<Map.Entry<Integer, Float>>(map.entrySet());
+
+		Collections.sort(listOfEntries, new Comparator<Map.Entry<Integer, Float>>() {
+			@Override
+			public int compare(Entry<Integer, Float> e1, Entry<Integer, Float> e2) {
+				return e2.getValue().compareTo(e1.getValue());
+			}
+		});
+		return listOfEntries;
 	}
 
 	// In the fullness of time, equivalents of the methods of this class should be
