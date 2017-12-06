@@ -1,15 +1,19 @@
 package com.soumitra.tensorflow.camerarecog;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -26,27 +30,35 @@ public class CamRecog {
 
 	private static final Logger logger = LoggerFactory.getLogger(CamRecog.class);
 
-	public String execute(String pathOfModel, byte[] imageData) {
+	public String execute(String pathOfModel, byte[] imageData, ClassLoader classLoader) throws Exception {
 		if (pathOfModel == null && imageData.length > 0) {
 			logger.error(
 					"This program uses a pre-trained inception model to identify JPEG images. Takes byte stream of images and compares with the model.");
 			logger.error("TensorFlow version: {} ", TensorFlow.version() != null ? TensorFlow.version() : 0);
 			System.exit(1);
 		}
-		String modelDir = pathOfModel;
-
-		byte[] graphDef = readAllBytesOrExit(Paths.get(modelDir, "tensorflow_inception_graph.pb"));
-		List<String> labels = readAllLinesOrExit(Paths.get(modelDir, "imagenet_comp_graph_label_strings.txt"));
-		byte[] imageBytes = imageData;
-
-		try (Tensor<Float> image = constructAndExecuteGraphToNormalizeImage(imageBytes)) {
+		List<String> labels = new ArrayList<>();
+		try (InputStream modelAsStream = classLoader
+				.getResourceAsStream("models/inception5h/tensorflow_inception_graph.pb");
+				InputStream labelsAsStream = classLoader
+						.getResourceAsStream("models/inception5h/imagenet_comp_graph_label_strings.txt");
+				Tensor<Float> image = constructAndExecuteGraphToNormalizeImage(imageData);
+				Scanner scanner = new Scanner(labelsAsStream);) {
+			byte[] graphDef = IOUtils.toByteArray(modelAsStream);
+			while (scanner.hasNextLine()) {
+				labels.add(scanner.nextLine());
+			}
 			float[] labelProbabilities = executeInceptionGraph(graphDef, image);
 			int bestMatchCaseLabelIndex = maxIndex(labelProbabilities);
 			String result = String.format("Probable match: %s (%.2f percentage)", labels.get(bestMatchCaseLabelIndex),
 					labelProbabilities[bestMatchCaseLabelIndex] * 100f);
 			logger.info(result);
 			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw new Exception(e.getMessage(), e);
 		}
+
 	}
 
 	private static Tensor<Float> constructAndExecuteGraphToNormalizeImage(byte[] imageBytes) {
@@ -88,7 +100,9 @@ public class CamRecog {
 							.expect(Float.class)) {
 				final long[] rshape = result.shape();
 				if (result.numDimensions() != 2 || rshape[0] != 1) {
-					logger.error("Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape {} ", Arrays.toString(rshape));
+					logger.error(
+							"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape {} ",
+							Arrays.toString(rshape));
 					throw new RuntimeException(String.format(
 							"Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape %s",
 							Arrays.toString(rshape)));
@@ -137,7 +151,7 @@ public class CamRecog {
 	static class GraphBuilder {
 
 		private Graph g;
-		
+
 		GraphBuilder(Graph g) {
 			this.g = g;
 		}

@@ -1,16 +1,13 @@
 package com.soumitra.tensorflow.camerarecog;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -34,24 +31,18 @@ public class CameraRecogService {
 		ClassLoader classLoader = getClass().getClassLoader();
 		String modelsPath = classLoader.getResource("models/inception5h").getPath();
 		String imagePath = classLoader.getResource("Caaar.jpg").getPath();
-		// InputStream imageAsStream = classLoader.getResourceAsStream("Caaar.jpg");
-		byte[] imageData = new byte[1000000];
+		logger.info("Image path {} ", imagePath);
+		logger.info("Model Path {} ", modelsPath);
 
-		/*try {
-			file = ResourceUtils.getFile(imagePath);
-		} catch (FileNotFoundException e) {
-			logger.error("Exception occurred while reading file: ", e);
-		}
-*/
 		try (InputStream imageAsStream = classLoader.getResourceAsStream("Caaar.jpg")) {
-			int length = imageAsStream.read(imageData);
-			//imageData = new byte[(int) length];
-			//imageAsStream.read(imageData);
-		} catch (IOException e) {
+			byte[] imageData = IOUtils.toByteArray(imageAsStream);
+			status.setMsg(camRecog.execute(modelsPath.substring(1, modelsPath.length()), imageData, classLoader));
+			status.setStatusCd(200);
+		} catch (Exception e) {
 			logger.error("Exception occurred while parsing file: ", e);
+			status.setMsg(e.getMessage());
+			status.setStatusCd(500);
 		}
-		status.setMsg(camRecog.execute(modelsPath.substring(1, modelsPath.length()), imageData));
-		status.setStatusCd(200);
 		return status;
 	}
 
