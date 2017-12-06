@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -29,8 +30,9 @@ public class CameraRecogService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@RequestMapping(value = "/fetchImageName", method = RequestMethod.GET)
-	public StatusDTO cameraService() {
+	public StatusDTO cameraService(@RequestParam("imageByteData") byte[] imageByteData) {
 		logger.info("Camera in Action");
+		logger.info("Image Byte Array {}", imageByteData);
 		StatusDTO status = new StatusDTO();
 		ClassLoader classLoader = getClass().getClassLoader();
 		String modelsPath = classLoader.getResource("models/inception5h").getPath();
@@ -38,9 +40,8 @@ public class CameraRecogService {
 		logger.info("Image path {} ", imagePath);
 		logger.info("Model Path {} ", modelsPath);
 
-		try (InputStream imageAsStream = classLoader.getResourceAsStream("Caaar.jpg")) {
-			byte[] imageData = IOUtils.toByteArray(imageAsStream);
-			status.setMsg(camRecog.execute(imageData, classLoader));
+		try {
+			status.setMsg(camRecog.execute(imageByteData, classLoader));
 			status.setStatusCd(200);
 		} catch (Exception e) {
 			logger.error("Exception occurred while parsing file: ", e);
