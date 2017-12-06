@@ -8,13 +8,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 
+ * @author Soumitra Mohakud This uses an already trained model to identify
+ *         images.
+ */
 @RestController
-//@CrossOrigin(origins = { "http://localhost:8100" })
 public class CameraRecogService {
 
 	@Autowired
@@ -27,7 +30,6 @@ public class CameraRecogService {
 	public StatusDTO cameraService() {
 		logger.info("Camera in Action");
 		StatusDTO status = new StatusDTO();
-		File file = null;
 		ClassLoader classLoader = getClass().getClassLoader();
 		String modelsPath = classLoader.getResource("models/inception5h").getPath();
 		String imagePath = classLoader.getResource("Caaar.jpg").getPath();
@@ -36,7 +38,7 @@ public class CameraRecogService {
 
 		try (InputStream imageAsStream = classLoader.getResourceAsStream("Caaar.jpg")) {
 			byte[] imageData = IOUtils.toByteArray(imageAsStream);
-			status.setMsg(camRecog.execute(modelsPath.substring(1, modelsPath.length()), imageData, classLoader));
+			status.setMsg(camRecog.execute(imageData, classLoader));
 			status.setStatusCd(200);
 		} catch (Exception e) {
 			logger.error("Exception occurred while parsing file: ", e);

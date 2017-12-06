@@ -1,15 +1,8 @@
 package com.soumitra.tensorflow.camerarecog;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -30,8 +23,8 @@ public class CamRecog {
 
 	private static final Logger logger = LoggerFactory.getLogger(CamRecog.class);
 
-	public String execute(String pathOfModel, byte[] imageData, ClassLoader classLoader) throws Exception {
-		if (pathOfModel == null && imageData.length > 0) {
+	public String execute(byte[] imageData, ClassLoader classLoader) throws Exception {
+		if (imageData.length > 0 && classLoader == null) {
 			logger.error(
 					"This program uses a pre-trained inception model to identify JPEG images. Takes byte stream of images and compares with the model.");
 			logger.error("TensorFlow version: {} ", TensorFlow.version() != null ? TensorFlow.version() : 0);
@@ -121,26 +114,6 @@ public class CamRecog {
 			}
 		}
 		return best;
-	}
-
-	static byte[] readAllBytesOrExit(Path path) {
-		try {
-			return Files.readAllBytes(path);
-		} catch (IOException e) {
-			logger.error("Failed to read [" + path + "]: {} ", e.getMessage());
-			System.exit(1);
-		}
-		return null;
-	}
-
-	private static List<String> readAllLinesOrExit(Path path) {
-		try {
-			return Files.readAllLines(path, Charset.forName("UTF-8"));
-		} catch (IOException e) {
-			logger.error("Failed to read [" + path + "]: ", e.getMessage());
-			System.exit(0);
-		}
-		return Collections.EMPTY_LIST;
 	}
 
 	// In the fullness of time, equivalents of the methods of this class should be
