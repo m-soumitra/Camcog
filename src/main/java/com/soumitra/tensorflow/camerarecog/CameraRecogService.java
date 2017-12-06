@@ -1,17 +1,13 @@
 package com.soumitra.tensorflow.camerarecog;
 
-import java.io.File;
-import java.io.InputStream;
-
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -29,8 +25,8 @@ public class CameraRecogService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	@RequestMapping(value = "/fetchImageName", method = RequestMethod.GET)
-	public StatusDTO cameraService(@RequestParam("imageByteData") byte[] imageByteData) {
+	@RequestMapping(value = "/fetchImageName", method = RequestMethod.POST)
+	public StatusDTO cameraService(@RequestBody byte[] imageByteData) {
 		logger.info("Camera in Action");
 		logger.info("Image Byte Array {}", imageByteData);
 		StatusDTO status = new StatusDTO();
