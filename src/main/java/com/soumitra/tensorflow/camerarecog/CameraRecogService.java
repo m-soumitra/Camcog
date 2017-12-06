@@ -1,5 +1,6 @@
 package com.soumitra.tensorflow.camerarecog;
 
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,10 @@ public class CameraRecogService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@RequestMapping(value = "/fetchImageName", method = RequestMethod.POST)
-	public StatusDTO cameraService(@RequestBody byte[] imageByteData) {
+	public StatusDTO cameraService(@RequestBody String encodedImage) {
 		logger.info("Camera in Action");
-		logger.info("Image Byte Array {}", imageByteData);
+		logger.info("Image Byte Array {}", encodedImage);
+		byte[] imageByteData = Base64.decodeBase64(encodedImage);
 		StatusDTO status = new StatusDTO();
 		ClassLoader classLoader = getClass().getClassLoader();
 		String modelsPath = classLoader.getResource("models/inception5h").getPath();
