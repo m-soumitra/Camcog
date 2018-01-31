@@ -22,7 +22,7 @@ public class CameraRecogService {
 
 	@Autowired
 	@Qualifier("camRecog")
-	CamRecog camRecog;
+	private CamRecog camRecog;
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -36,7 +36,8 @@ public class CameraRecogService {
 		ClassLoader classLoader = getClass().getClassLoader();
 
 		try {
-			status.setMsg(camRecog.execute(imageByteData, matchCasesReq, classLoader));
+			status.setResults(camRecog.execute(imageByteData, matchCasesReq, classLoader));
+			status.setMsg("Success");
 			status.setStatusCd(200);
 		} catch (Exception e) {
 			logger.error("Exception occurred while parsing file: ", e);

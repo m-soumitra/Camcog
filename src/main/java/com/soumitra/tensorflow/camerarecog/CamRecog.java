@@ -35,12 +35,12 @@ public class CamRecog {
 
 	private static final Logger logger = LoggerFactory.getLogger(CamRecog.class);
 
-	public String execute(byte[] imageData, int matchCasesReq, ClassLoader classLoader) throws Exception {
+	public List<String> execute(byte[] imageData, int matchCasesReq, ClassLoader classLoader) throws Exception {
 		if (imageData.length > 0 && classLoader == null) {
 			logger.error(
 					"This program uses a pre-trained inception model to identify JPEG images. Takes byte stream of images and compares with the model.");
 			logger.error("TensorFlow version: {} ", TensorFlow.version() != null ? TensorFlow.version() : 0);
-			System.exit(1);
+			throw new RuntimeException("No data received");
 		}
 		List<String> labels = new ArrayList<>();
 		try (InputStream modelAsStream = classLoader
@@ -54,23 +54,23 @@ public class CamRecog {
 				labels.add(scanner.nextLine());
 			}
 			float[] labelProbabilities = executeInceptionGraph(graphDef, image);
-			String result = "";
+			List<String> result = new ArrayList<>();
 			if (matchCasesReq > 1) {
 				List<Entry<Integer, Float>> maxIndexList = maxIndexList(labelProbabilities);
 				if (!CollectionUtils.isEmpty(maxIndexList)) {
 					StringBuilder resultBuilder = new StringBuilder("Probable matches: ");
 					for (int i = 0; i < matchCasesReq; i++) {
-						resultBuilder.append(String.format("%s (%.2f percentage) :",
+						resultBuilder.append(String.format("%s (%.2f percentage) ",
 								labels.get(maxIndexList.get(i).getKey()), maxIndexList.get(i).getValue() * 100f));
 					}
-					result = resultBuilder.toString();
-				} else {
-					int bestMatchCaseLabelIndex = maxIndex(labelProbabilities);
-					result = String.format("Probable match: %s (%.2f percentage)", labels.get(bestMatchCaseLabelIndex),
-							labelProbabilities[bestMatchCaseLabelIndex] * 100f);
+					result.add(resultBuilder.toString());
 				}
+			} else {
+				int bestMatchCaseLabelIndex = maxIndex(labelProbabilities);
+				result.add(String.format("Probable match: %s (%.2f percentage)", labels.get(bestMatchCaseLabelIndex),
+						labelProbabilities[bestMatchCaseLabelIndex] * 100f));
 			}
-			logger.info(result);
+			logger.info(result.toString());
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
