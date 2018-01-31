@@ -58,12 +58,10 @@ public class CamRecog {
 			if (matchCasesReq > 1) {
 				List<Entry<Integer, Float>> maxIndexList = maxIndexList(labelProbabilities);
 				if (!CollectionUtils.isEmpty(maxIndexList)) {
-					StringBuilder resultBuilder = new StringBuilder("Probable matches: ");
 					for (int i = 0; i < matchCasesReq; i++) {
-						resultBuilder.append(String.format("%s (%.2f percentage) ",
-								labels.get(maxIndexList.get(i).getKey()), maxIndexList.get(i).getValue() * 100f));
+						result.add(String.format("%s (%.2f percentage) ", labels.get(maxIndexList.get(i).getKey()),
+								maxIndexList.get(i).getValue() * 100f));
 					}
-					result.add(resultBuilder.toString());
 				}
 			} else {
 				int bestMatchCaseLabelIndex = maxIndex(labelProbabilities);
